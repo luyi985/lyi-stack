@@ -1,0 +1,88 @@
+version: "3.9"
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.2.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - lyi-networks
+
+  kafka_broker:
+    image: confluentinc/cp-kafka:6.2.0
+    container_name: kafka_broker
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka_broker:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    networks:
+      - lyi-networks
+
+  kafka_view:
+    image: quay.io/cloudhut/kowl:master
+    container_name: kafka_view
+    restart: on-failure
+    entrypoint: ./kowl --config.filepath=/etc/kowl/config.yaml
+    volumes:
+      - ./data/kowlConfig.yaml:/etc/kowl/config.yaml
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka_broker
+    networks:
+      - lyi-networks
+
+  redis_db:
+    image: "redis:6.2.5-alpine"
+    container_name: redis_db
+    networks:
+      - lyi-networks
+
+  build:
+    image: "node:16.10.0-alpine3.14"
+    container_name: build
+    working_dir: "/app"
+    volumes:
+      - ./app/src:/app/src
+      - ./app/.env:/app/.env
+      - ./app/nodemon.json:/app/nodemon.json
+      - ./app/package.json:/app/package.json
+      - ./app/tsconfig.json:/app/tsconfig.json
+      - file_packages:/app/node_modules
+    entrypoint: ["tail", "-f", "/dev/null"]
+    depends_on:
+      - kafka_broker
+      - redis_db
+    networks:
+      - lyi-networks
+
+  # nginx:
+  #   image: "nginx:1.21.1-alpine"
+  #   environment:
+  #     - NGINX_PORT=80
+  #   ports:
+  #     - "8080:80"
+  #   networks:
+  #     - lyi-external
+  #     - lyi-networks
+  #   volumes:
+  #     - ./nginx:/etc/nginx/conf.d
+  # mqtt:
+  #   image: "hivemq/hivemq4"
+  #   networks:
+  #     - lyi-networks
+  # elasticSearch:
+  #   image: "docker.elastic.co/elasticsearch/elasticsearch:8.0.0-alpha1"
+volumes:
+  file_packages:
+networks:
+  lyi-networks:
