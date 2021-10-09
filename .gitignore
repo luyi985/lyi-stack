@@ -106,3 +106,5 @@ app/dist
 
 # TernJS port file
 .tern-port
+
+data
