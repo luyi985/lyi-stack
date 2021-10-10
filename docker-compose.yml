@@ -57,9 +57,11 @@ services:
       - ./app/src:/app/src
       - ./app/.env:/app/.env
       - ./app/nodemon.json:/app/nodemon.json
+      - ./app/jest.config.js:/app/jest.config.js
       - ./app/package.json:/app/package.json
+      - ./app/package-lock.json:/app/package-lock.json
       - ./app/tsconfig.json:/app/tsconfig.json
-      - file_packages:/app/node_modules
+    #   - file_packages:/app/node_modules
     entrypoint: ["tail", "-f", "/dev/null"]
     depends_on:
       - kafka_broker
