@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:6.2.0
+    image: confluentinc/cp-zookeeper:latest
     container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -10,7 +10,7 @@ services:
       - lyi-networks
 
   kafka_broker:
-    image: confluentinc/cp-kafka:6.2.0
+    image: confluentinc/cp-kafka:latest
     container_name: kafka_broker
     ports:
       - "9092:9092"
@@ -48,26 +48,28 @@ services:
     container_name: redis_db
     networks:
       - lyi-networks
-
-  build:
-    image: "node:16.10.0-alpine3.14"
-    container_name: build
-    working_dir: "/app"
-    volumes:
-      - ./app/src:/app/src
-      - ./app/.env:/app/.env
-      - ./app/nodemon.json:/app/nodemon.json
-      - ./app/jest.config.js:/app/jest.config.js
-      - ./app/package.json:/app/package.json
-      - ./app/package-lock.json:/app/package-lock.json
-      - ./app/tsconfig.json:/app/tsconfig.json
-    #   - file_packages:/app/node_modules
-    entrypoint: ["tail", "-f", "/dev/null"]
-    depends_on:
-      - kafka_broker
-      - redis_db
-    networks:
-      - lyi-networks
+networks:
+  lyi-networks:
+    name: lyi-networks
+  # build:
+  #   image: "node:16.10.0-alpine3.14"
+  #   container_name: build
+  #   working_dir: "/app"
+  #   volumes:
+  #     - ./app/src:/app/src
+  #     - ./app/.env:/app/.env
+  #     - ./app/nodemon.json:/app/nodemon.json
+  #     - ./app/jest.config.js:/app/jest.config.js
+  #     - ./app/package.json:/app/package.json
+  #     - ./app/package-lock.json:/app/package-lock.json
+  #     - ./app/tsconfig.json:/app/tsconfig.json
+  #   #   - file_packages:/app/node_modules
+  #   entrypoint: ["tail", "-f", "/dev/null"]
+  #   depends_on:
+  #     - kafka_broker
+  #     - redis_db
+  #   networks:
+  #     - lyi-networks
 
   # nginx:
   #   image: "nginx:1.21.1-alpine"
@@ -86,7 +88,6 @@ services:
   #     - lyi-networks
   # elasticSearch:
   #   image: "docker.elastic.co/elasticsearch/elasticsearch:8.0.0-alpha1"
-volumes:
-  file_packages:
-networks:
-  lyi-networks:
+# volumes:
+#   file_packages:
+
