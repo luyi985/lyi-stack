@@ -108,3 +108,4 @@ app/dist
 .tern-port
 
 data
+kafka_backup
