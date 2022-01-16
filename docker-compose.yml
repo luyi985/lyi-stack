@@ -54,6 +54,21 @@ services:
     container_name: redis_db
     networks:
       - lyi-networks
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 3000:8080
+    networks:
+      - lyi-networks
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: admin
+    networks:
+      - lyi-networks
 networks:
   lyi-networks:
     name: lyi-networks
