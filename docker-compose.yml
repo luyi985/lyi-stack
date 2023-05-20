@@ -4,34 +4,21 @@ services:
     image: "bitnami/zookeeper:latest"
     ports:
       - "2181:2181"
-    environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
-      - ZOO_ENABLE_AUTH=yes
-      - ZOO_SERVER_USERS=kafka
-      - ZOO_SERVER_PASSWORDS=kafka_password
+    env_file:
+      - stack-env.env
     volumes:
       - "./kafka_backup:/bitnami"
     networks:
       - lyi-networks
-  kafka_broker:
+  kafka:
     image: "bitnami/kafka:latest"
     ports:
       - "9092:9092"
       - "9093:9093"
     volumes:
       - "./kafka_backup:/bitnami"
-    environment:
-      - KAFKA_BROKER_ID=1
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
-      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
-      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:9093
-      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
-      - KAFKA_ZOOKEEPER_USER=kafka
-      - KAFKA_ZOOKEEPER_PASSWORD=kafka_password
-      - KAFKA_CLIENT_USER=user
-      - KAFKA_CLIENT_PASSWORD=password
+    env_file:
+      - stack-env.env
     depends_on:
       - zookeeper
     networks:
@@ -46,29 +33,21 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - kafka_broker
+      - kafka
+      - zookeeper
     networks:
       - lyi-networks
-  redis_db:
-    image: "redis:6.2.5-alpine"
-    container_name: redis_db
+  app:
+    env_file:
+      - stack-env.env
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    volumes:
+      - ./app:/app
     networks:
       - lyi-networks
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 3000:8080
-    networks:
-      - lyi-networks
-  db:
-    image: postgres
-    restart: always
-    environment:
-      POSTGRES_PASSWORD: password
-      POSTGRES_USER: admin
-    networks:
-      - lyi-networks
+    entrypoint: ["tail", "-f", "/dev/null"]
 networks:
   lyi-networks:
     name: lyi-networks
